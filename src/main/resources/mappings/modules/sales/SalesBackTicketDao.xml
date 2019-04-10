@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.fast.modules.sales.dao.SalesBackTicketDao">
+    
+	<sql id="salesBackTicketColumns">
+		a.id AS "id",
+		a.back_ticket_number AS "backTicketNumber",
+		a.sales_id AS "salesOrder.id",
+		a.goods_id AS "salesGoods.id",
+		a.unit_back_number AS "unitBackNumber",
+		a.back_price_tax_free AS "backPriceTaxFree",
+		a.back_price_total_tax AS "backPriceTotalTax",
+		a.back_price_tax_amount AS "backPriceTaxAmount",
+		a.return_reason AS "returnReason",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="salesBackTicketJoins">
+		LEFT JOIN sales_order s ON s.id = a.sales_id
+	</sql>
+    
+	<select id="get" resultType="SalesBackTicket">
+		SELECT 
+			<include refid="salesBackTicketColumns"/>
+		FROM sales_back_ticket a
+		<include refid="salesBackTicketJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="SalesBackTicket">
+		SELECT 
+			a.back_ticket_number AS "backTicketNumber",
+			a.sales_id AS "salesOrder.id",
+			sum(a.back_price_tax_free) AS "backPriceTaxFree",
+			sum(a.back_price_total_tax) AS "backPriceTotalTax",
+			sum(a.back_price_tax_amount) AS "backPriceTaxAmount",
+			a.create_by AS "createBy.id",
+			a.create_date AS "createDate"
+		FROM sales_back_ticket a
+		<include refid="salesBackTicketJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="salesOrder != null and salesOrder.orderNum != null and salesOrder.orderNum != ''">
+				AND s.order_num LIKE 
+					<if test="dbName == 'oracle'">'%'||#{salesOrder.orderNum}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{salesOrder.orderNum}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{salesOrder.orderNum},'%')</if>
+			</if>
+			<if test="createDate != null and createDate != ''">
+				AND a.create_date = #{createDate}
+			</if>
+		</where>
+		Group By a.back_ticket_number
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="SalesBackTicket">
+		SELECT 
+			<include refid="salesBackTicketColumns"/>
+		FROM sales_back_ticket a
+		<include refid="salesBackTicketJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO sales_back_ticket(
+			id,
+			sales_id,
+			goods_id,
+			back_ticket_number,
+			unit_back_number,
+			back_price_tax_free,
+			back_price_total_tax,
+			back_price_tax_amount,
+			return_reason,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{salesOrder.id},
+			#{salesGoods.id},
+			#{backTicketNumber},
+			#{unitBackNumber},
+			#{backPriceTaxFree},
+			#{backPriceTotalTax},
+			#{backPriceTaxAmount},
+			#{returnReason},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE sales_back_ticket SET 	
+			sales_id = #{salesOrder.id},
+			goods_id = #{goodsId},
+			back_ticket_number = #{backTicketNumber},
+			unit_back_number = #{unitBackNumber},
+			back_price_tax_free = #{backPriceTaxFree},
+			back_price_total_tax = #{backPriceTotalTax},
+			back_price_tax_amount = #{backPriceTaxAmount},
+			return_reason = #{returnReason},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE sales_back_ticket SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<select id="findFirstByOrderNumLikeOrderByOrderNumDesc" resultType="SalesBackTicket">
+		SELECT
+		<include refid="salesBackTicketColumns"/>
+		FROM sales_back_ticket a
+		<include refid="salesBackTicketJoins"/>
+		where a.del_flag = '0'
+		order by back_ticket_number desc
+		limit 1
+	</select>
+
+	<select id="findListWithBackTicketNumber" resultType="SalesBackTicket">
+		SELECT
+		<include refid="salesBackTicketColumns"/>
+		FROM sales_back_ticket a
+		<include refid="salesBackTicketJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			AND a.back_ticket_number = #{backTicketNumber}
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+</mapper>

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.fast.modules.goods.dao.GoodsLimitSaleDao">
+    
+	<sql id="goodsLimitSaleColumns">
+		a.id AS "id",
+		a.goods_id AS "goodsId",
+		a.limit_type AS "limitType",
+		a.start_date AS "startDate",
+		a.end_date AS "endDate",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="goodsLimitSaleJoins">
+	</sql>
+    
+	<select id="get" resultType="GoodsLimitSale">
+		SELECT 
+			<include refid="goodsLimitSaleColumns"/>
+		FROM goods_limit_sale a
+		<include refid="goodsLimitSaleJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="GoodsLimitSale">
+		SELECT 
+			<include refid="goodsLimitSaleColumns"/>
+		FROM goods_limit_sale a
+		<include refid="goodsLimitSaleJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="goodsId != null and goodsId != ''">
+				AND a.goods_id = #{goodsId}
+			</if>
+			<if test="limitType != null and limitType != ''">
+				AND a.limit_type = #{limitType}
+			</if>
+			<if test="startDate != null and startDate != ''">
+				AND a.start_date = #{startDate}
+			</if>
+			<if test="endDate != null and endDate != ''">
+				AND a.end_date = #{endDate}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="GoodsLimitSale">
+		SELECT 
+			<include refid="goodsLimitSaleColumns"/>
+		FROM goods_limit_sale a
+		<include refid="goodsLimitSaleJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO goods_limit_sale(
+			id,
+			goods_id,
+			limit_type,
+			start_date,
+			end_date,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{goodsId},
+			#{limitType},
+			#{startDate},
+			#{endDate},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE goods_limit_sale SET 	
+			goods_id = #{goodsId},
+			limit_type = #{limitType},
+			start_date = #{startDate},
+			end_date = #{endDate},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE goods_limit_sale SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+</mapper>
